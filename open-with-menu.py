@@ -33,7 +33,7 @@ class OpenWithMenu(GObject.GObject, Nautilus.MenuProvider):
 	"""'Open With…' Menu"""
 	def __init__(self):
 		pass
-	
+
 	def get_file_items(self, window, file_items):
 		"""Nautilus invoke this function in its startup > Then, create menu entry"""
 		# Checks
@@ -54,16 +54,15 @@ class OpenWithMenu(GObject.GObject, Nautilus.MenuProvider):
 			return False
 		
 		return True
-	
+
 	def _generate_menu(self, file_items):
 		"""Generate menu"""
 		top_menuitem = Nautilus.MenuItem(name='OpenWithMenu', label=_("Open With…"), sensitive=True)
 		menu = Nautilus.Menu()
 		possible_apps = []
-		self.uris = []
-		
+		self.files = file_items
+
 		for item in file_items:
-			self.uris.append(item.get_uri())
 			item_type = item.get_mime_type()
 			if len(possible_apps) == 0:
 				possible_apps = Gio.AppInfo.get_all_for_type(item_type)
@@ -85,15 +84,22 @@ class OpenWithMenu(GObject.GObject, Nautilus.MenuProvider):
 	def add_app_item(self, app, index):
 		item_label = app.get_name()
 		item_name = 'OpenWithMenu' + str(index)
+		# le constructeur a un paramètre icon mais je ne le pige pas
 		item = Nautilus.MenuItem(name=item_name, label=item_label, sensitive=True)
 		item.connect('activate', self.open_with_app, app)
 		return item
 	
 	def open_with_app(self, menuitem, app):
-		print(app)
 		if app.supports_uris():
-			app.launch_uris(self.uris)
-
+			uris = []
+			for item in self.files:
+				uris.append(item.get_uri())
+			app.launch_uris(uris)
+		elif app.supports_files():
+			files = []
+			for item in self.files:
+				files.append(item.get_location())
+			app.launch(files)
 
 
 
