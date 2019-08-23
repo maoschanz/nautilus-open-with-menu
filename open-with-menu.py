@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# "Nautilus Open With Menu" 0.5
+# "Nautilus Open With Menu" 0.6
 # Copyright (C) 2018 Romain F. T.
 #
 # "Nautilus Open With Menu" is free software; you can redistribute it and/or modify
@@ -20,48 +20,29 @@ import os, gi, gettext, urllib
 gi.require_version('Nautilus', '3.0')
 from gi.repository import Nautilus, Gtk, GObject, Gio, GLib
 
-BASE_PATH = os.path.dirname(os.path.realpath(__file__))
-LOCALE_PATH = os.path.join(BASE_PATH, 'locale')
-try:
-	import gettext
-	gettext.bindtextdomain('open-with-menu', LOCALE_PATH)
-	_ = lambda s: gettext.dgettext('open-with-menu', s)
-except:
-	_ = lambda s: s
+# TODO translations
 
 class OpenWithMenu(GObject.GObject, Nautilus.MenuProvider):
 	"""'Open With…' Menu"""
 	def __init__(self):
 		pass
-
+	
 	def get_file_items(self, window, file_items):
-		"""Nautilus invoke this function in its startup > Then, create menu entry"""
-		# Checks
-		if not self._check_generate_menu(file_items):
+		"""Nautilus invoke this function when building the menu on files."""
+		if not len(file_items):
 			return
-		
-		# Return menu
 		return self._generate_menu(file_items)
 	
 	def get_background_items(self, window, file_items):
+		"""Nautilus invoke this function when building the menu on the empty
+		background."""
 		pass
 	
-	def _check_generate_menu(self, file_items):
-		"""Show the menu?"""
-		
-		# No items selected
-		if not len(file_items):
-			return False
-		
-		return True
-
 	def _generate_menu(self, file_items):
-		"""Generate menu"""
-		top_menuitem = Nautilus.MenuItem(name='OpenWithMenu', label=_("Open With…"), sensitive=True)
-		menu = Nautilus.Menu()
+		"""Generate the menu item and its submenu."""
 		possible_apps = []
 		self.files = file_items
-
+		
 		for item in file_items:
 			item_type = item.get_mime_type()
 			if len(possible_apps) == 0:
@@ -75,16 +56,19 @@ class OpenWithMenu(GObject.GObject, Nautilus.MenuProvider):
 							possible_apps_common.append(app)
 				possible_apps = possible_apps_common
 		
+		menu = Nautilus.Menu()
 		for app in possible_apps:
 			menu.append_item(self.add_app_item(app, possible_apps.index(app)))
-
-		top_menuitem.set_submenu(menu)
-		return top_menuitem, None
+		
+		menuitem = Nautilus.MenuItem(name='OpenWithMenu', label="Open With…")
+		menuitem.set_submenu(menu)
+		return menuitem, None
 	
 	def add_app_item(self, app, index):
 		item_label = app.get_name()
 		item_name = 'OpenWithMenu' + str(index)
-		# le constructeur a un paramètre icon mais je ne le pige pas
+		# according to the documentation, the constructor has an 'icon'
+		# parameter but i don't understand how it works
 		item = Nautilus.MenuItem(name=item_name, label=item_label, sensitive=True)
 		item.connect('activate', self.open_with_app, app)
 		return item
@@ -101,5 +85,6 @@ class OpenWithMenu(GObject.GObject, Nautilus.MenuProvider):
 				files.append(item.get_location())
 			app.launch(files)
 
-
+	############################################################################
+################################################################################
 
