@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-# "Nautilus Open With Menu" 0.6
-# Copyright (C) 2018 Romain F. T.
+# "Nautilus Open With Menu" 0.8
+# Copyright (C) 2018-2023 Romain F. T.
 #
 # "Nautilus Open With Menu" is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -41,6 +41,8 @@ class OpenWithMenu(GObject.GObject, Nautilus.MenuProvider):
 		"""Nautilus invoke this function when building the menu on the empty
 		background."""
 		pass
+
+	############################################################################
 	
 	def _generate_menu(self, file_items):
 		"""Generate the menu item and its submenu."""
@@ -62,22 +64,22 @@ class OpenWithMenu(GObject.GObject, Nautilus.MenuProvider):
 		
 		menu = Nautilus.Menu()
 		for app in possible_apps:
-			menu.append_item(self.add_app_item(app, possible_apps.index(app)))
+			menu.append_item(self._add_app_item(app, possible_apps.index(app)))
 		
 		menuitem = Nautilus.MenuItem(name='OpenWithMenu', label="Open With…")
 		menuitem.set_submenu(menu)
 		return menuitem, None
 	
-	def add_app_item(self, app, index):
+	def _add_app_item(self, app, index):
 		item_label = app.get_name()
 		item_name = 'OpenWithMenu' + str(index)
 		# according to the documentation, the constructor has an 'icon'
 		# parameter but i don't understand how it works
 		item = Nautilus.MenuItem(name=item_name, label=item_label, sensitive=True)
-		item.connect('activate', self.open_with_app, app)
+		item.connect('activate', self._open_with_app, app)
 		return item
 	
-	def open_with_app(self, menuitem, app):
+	def _open_with_app(self, menuitem, app):
 		if app.supports_uris():
 			uris = []
 			for item in self.files:
