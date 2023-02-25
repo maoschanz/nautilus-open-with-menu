@@ -17,7 +17,10 @@
 # for more information.
 
 import os, gi, gettext, urllib
-gi.require_version('Nautilus', '3.0')
+try:
+	gi.require_version("Nautilus", "4.0")
+except ValueError:
+	gi.require_version("Nautilus", "3.0")
 from gi.repository import Nautilus, Gtk, GObject, Gio, GLib
 
 # TODO translations
@@ -27,13 +30,14 @@ class OpenWithMenu(GObject.GObject, Nautilus.MenuProvider):
 	def __init__(self):
 		pass
 	
-	def get_file_items(self, window, file_items):
+	def get_file_items(self, *args):
 		"""Nautilus invoke this function when building the menu on files."""
+		file_items = args[-1]
 		if not len(file_items):
 			return
 		return self._generate_menu(file_items)
 	
-	def get_background_items(self, window, file_items):
+	def get_background_items(self, *args):
 		"""Nautilus invoke this function when building the menu on the empty
 		background."""
 		pass
